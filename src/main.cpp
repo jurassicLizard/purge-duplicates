@@ -29,23 +29,33 @@
  */
 #include "PurgeDuplicates.hpp"
 #include <iostream>
+#include <string>
 
 int main(int argc, char* argv[]) {
+    // Argument usage check
     if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <directory_path> [--show-progress]" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <directory_path> [--show-progress] [--live-run]" << std::endl;
         return 1;
     }
 
     const std::string directory = argv[1];
     bool showProgress = false;
+    bool liveRun = false;
 
-    if (argc >= 3 && std::string(argv[2]) == "--show-progress") {
-        showProgress = true;
+    // Parse additional arguments
+    for (int i = 2; i < argc; ++i) {
+        std::string argument = argv[i];
+        if (argument == "--show-progress") {
+            showProgress = true;
+        } else if (argument == "--live-run") {
+            liveRun = true;
+        }
     }
 
     try {
-        PurgeDuplicates purgeDuplicates(directory, showProgress);
-        purgeDuplicates.execute();
+        // Pass the new flag to PurgeDuplicates
+        PurgeDuplicates purgeDuplicates(directory, showProgress, liveRun);
+        purgeDuplicates.execute(); // Begin execution
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;

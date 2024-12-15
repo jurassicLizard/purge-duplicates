@@ -40,8 +40,8 @@
 
 namespace fs = std::filesystem;
 
-PurgeDuplicates::PurgeDuplicates(const std::string& directory, bool showProgress)
-        : directoryPath(directory), showProgress(showProgress) {}
+PurgeDuplicates::PurgeDuplicates(const std::string& directory, bool showProgress, bool liveRun)
+        : directoryPath(directory), showProgress(showProgress), liveRun(liveRun) {}
 
 std::string PurgeDuplicates::generateSHA256(const std::string& filePath) {
     EVP_MD_CTX* context = EVP_MD_CTX_new();
@@ -111,6 +111,7 @@ void PurgeDuplicates::identifyAndRemoveDuplicates() {
     std::vector<std::string> duplicates;
     size_t totalFiles = 0;
 
+    // Count total files for progress display
     if (showProgress) {
         for (const auto& entry : fs::recursive_directory_iterator(directoryPath)) {
             if (entry.is_regular_file()) {
@@ -125,6 +126,7 @@ void PurgeDuplicates::identifyAndRemoveDuplicates() {
 
     size_t processedFiles = 0;
 
+    // Identify duplicates
     for (const auto& entry : fs::recursive_directory_iterator(directoryPath)) {
         if (entry.is_regular_file()) {
             const std::string filePath = entry.path().string();
@@ -150,16 +152,26 @@ void PurgeDuplicates::identifyAndRemoveDuplicates() {
 
     std::cout << std::endl;
 
-    for (const auto& duplicate : duplicates) {
-        try {
-            fs::remove(duplicate);
-            std::cout << "Removed duplicate: " << duplicate << std::endl;
-        } catch (const std::exception& e) {
-            std::cerr << "Error deleting file: " << duplicate << " - " << e.what() << std::endl;
+    // Handle duplicates based on --live-run flag
+    if (liveRun) {
+        for (const auto& duplicate : duplicates) {
+            try {
+                fs::remove(duplicate);
+                std::cout << "Removed duplicate: " << duplicate << std::endl;
+            } catch (const std::exception& e) {
+                std::cerr << "Error deleting file: " << duplicate << " - " << e.what() << std::endl;
+            }
         }
+        std::cout << "Duplicate removal complete. Processed " << fileHashes.size() << " unique files." << std::endl;
+    } else {
+        // Dry-run: List duplicate files without deletion
+        std::cout << "Dry Run: The following files would be deleted:" << std::endl;
+        for (const auto& duplicate : duplicates) {
+            std::cout << "  " << duplicate << std::endl;
+        }
+        std::cout << "Dry run complete. No files were deleted." << std::endl;
+        std::cout << "To perform the actual deletion, re-run the command with the --live-run flag." << std::endl;
     }
-
-    std::cout << "Duplicate removal complete. Processed " << fileHashes.size() << " unique files." << std::endl;
 }
 
 void PurgeDuplicates::execute() {

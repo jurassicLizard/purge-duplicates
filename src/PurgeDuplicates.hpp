@@ -38,9 +38,9 @@ public:
      * @brief Constructor to initialize the PurgeDuplicates object.
      * @param directory Path to the directory that will be processed.
      * @param showProgress Whether to display a progress bar or not.
+     * @param liveRun Must be passed and set as true to force a real run
      */
-    PurgeDuplicates(const std::string& directory, bool showProgress);
-
+    PurgeDuplicates(const std::string& directory, bool showProgress, bool liveRun = false);
     /**
      * @brief Executes the logic for identifying and removing duplicates.
      */
@@ -65,6 +65,7 @@ void displayProgress(size_t current, size_t total);
 private:
     std::string directoryPath; // The path to the target directory
     bool showProgress;         // Flag to indicate if a progress bar is displayed
+    bool liveRun;              // Force a real deletion of files instead of a dry run
 
     /**
      * @brief Identifies and removes duplicate files in a directory.
