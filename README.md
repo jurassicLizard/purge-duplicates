@@ -130,7 +130,7 @@ This project uses **CMake** for cross-platform builds. Ensure you have the prere
 
 2. Clone and build the project:
    ```bash
-   git clone https://github.com/yourusername/purge-duplicates.git
+   git clone https://github.com/jurassicLizard/purge-duplicates.git
    cd purge-duplicates
    mkdir build
    cd build
