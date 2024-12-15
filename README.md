@@ -18,16 +18,16 @@
 
 ## Table of Contents
 
-- [Getting Started](#getting-started)
-- [Usage](#usage)
-  - [Command-Line Arguments](#command-line-arguments)
-- [Building from Source](#building-from-source)
-  - [Linux](#linux)
-  - [Windows](#windows)
-  - [Installing and Uninstalling the Software](#installing-and-uninstalling-the-software)
-- [Testing](#testing)
-- [Contributing](#contributing)
-- [License](#license)
+1. [Getting Started](#getting-started)
+2. [Usage](#usage)
+    - [Command-Line Arguments](#command-line-arguments)
+3. [Building from Source](#building-from-source)
+    - [Linux](#linux)
+    - [Windows](#windows)
+    - [Installing and Uninstalling the Software](#installing-and-uninstalling-the-software)
+4. [Testing](#testing)
+5. [Contributing](#contributing)
+6. [License](#license)
 
 ---
 
@@ -124,9 +124,9 @@ This project uses **CMake** for cross-platform builds. Ensure you have the prere
 ### Linux
 
 1. Install prerequisites:
-  - **GCC** or **Clang** compiler supporting C++17.
-  - CMake version >= 3.15.
-  - OpenSSL library version >= 1.0.0.
+    - **GCC** or **Clang** compiler supporting C++17.
+    - CMake version >= 3.15.
+    - OpenSSL library version >= 1.0.0.
 
 2. Clone and build the project:
    ```bash
@@ -134,11 +134,19 @@ This project uses **CMake** for cross-platform builds. Ensure you have the prere
    cd purge-duplicates
    mkdir build
    cd build
-   cmake ..
+   cmake .. -DCMAKE_BUILD_TYPE=Release
    make
    ```
 
+    - The `-DCMAKE_BUILD_TYPE=Release` flag ensures the project is built in optimized **Release mode**.
+
 3. The compiled binary will be located in the `build/bin/` folder.
+
+4. (Optional) To install the binary system-wide:
+   ```bash
+   sudo cmake --install . --prefix /usr/local
+   ```
+    - By default, the binary will be installed to `/usr/local/bin`.
 
 ---
 
@@ -147,15 +155,15 @@ This project uses **CMake** for cross-platform builds. Ensure you have the prere
 The project is compatible with **Windows**, but preparation is required due to external dependencies (e.g., OpenSSL). These instructions use Visual Studio and a prebuilt OpenSSL binary.
 
 1. Install prerequisites:
-  - Visual Studio 2017 or newer with C++ tools.
-  - Prebuilt [OpenSSL for Windows](https://slproweb.com/products/Win32OpenSSL.html) or compile OpenSSL manually.
-  - CMake version >= 3.15.
+    - Visual Studio 2017 or newer with C++ tools.
+    - Prebuilt [OpenSSL for Windows](https://slproweb.com/products/Win32OpenSSL.html) or compile OpenSSL manually.
+    - CMake version >= 3.15.
 
 2. Add OpenSSL to the system environment:
-  - Set the `CMAKE_PREFIX_PATH` environment variable:
-    ```powershell
-    $env:CMAKE_PREFIX_PATH = "C:/path/to/openssl"
-    ```
+    - Set the `CMAKE_PREFIX_PATH` environment variable:
+      ```powershell
+      $env:CMAKE_PREFIX_PATH = "C:/path/to/openssl"
+      ```
 
 3. Clone and build the project:
    ```powershell
@@ -177,70 +185,33 @@ The project is compatible with **Windows**, but preparation is required due to e
 
 The project includes an **install target** to simplify deployment. The `cmake --install` command ensures that the binary and associated files are installed in system-appropriate directories (e.g., `/usr/local/bin` on Linux).
 
-1. **Install the binary (Linux/macOS/Windows):**
+1. Install the binary:
    ```bash
    cmake --install . --prefix /custom/install/path
    ```
 
-  - By default, the binary will be installed to `/usr/local/bin` on Linux/macOS.
-
-  - Use the `--prefix` argument to specify a custom path for installation.
-
-2. **Running the Installed Binary:**
-   After installation, the `purge_duplicates` binary can be executed from anywhere. Example:
+2. Run the installed binary from anywhere:
    ```bash
    purge_duplicates /path/to/folder --show-progress
    ```
 
-3. **Checking the Install Directory:**
-  - On Linux/macOS:
-    - Executable: `/usr/local/bin/purge_duplicates`
-    - Include headers (if applicable): `/usr/local/include/purge-duplicates/`
-  - On Windows: The path will depend on the specified `--prefix` or default system settings.
-
 #### Uninstalling the Software
 
-This project does not include an automatic uninstall option. To remove files installed during the installation process, you must manually delete them from the install locations.
-
-By default, the following directories are used for installation (on Linux/macOS):
-- **Binary (Executable):** `/usr/local/bin/purge_duplicates`
-- **Library (if applicable):** `/usr/local/lib`
-- **Headers (if applicable):** `/usr/local/include/purge-duplicates`
-
-To uninstall, use the following commands:
+To uninstall, delete the installed files manually, e.g.:
 ```bash
 sudo rm -f /usr/local/bin/purge_duplicates
 sudo rm -rf /usr/local/include/purge-duplicates/
-sudo rm -f /usr/local/lib/libpurge_duplicates.*
 ```
-
-If you specified a custom `CMAKE_INSTALL_PREFIX`, ensure you remove files from the corresponding paths, substituting `/usr/local` with your custom prefix.
 
 ---
 
 ## Testing
 
-The project includes built-in testing functionality to ensure the correctness and reliability of the tool. Testing can be enabled during the build configuration process. Additionally, AddressSanitizer (ASan) support is available for enhanced memory error detection during testing.
+The project includes built-in testing functionality.
 
-### Testing Options
-
-1. **Standard Testing (`PDCPP_ENABLE_TESTING`)**:
-  - Enable basic testing framework by configuring with:
-    ```bash
-    cmake .. -DPDCPP_ENABLE_TESTING=ON
-    ```
-
-2. **Testing with AddressSanitizer (`PDCPP_ENABLE_TESTING_WITH_ASAN`)**:
-  - Use AddressSanitizer for memory error detection by configuring with:
-    ```bash
-    cmake .. -DPDCPP_ENABLE_TESTING_WITH_ASAN=ON
-    ```
-
-### Running Tests
-
-1. Build the project in debug mode:
+1. Enable testing:
    ```bash
-   cmake --build . --config Debug
+   cmake .. -DPDCPP_ENABLE_TESTING=ON
    ```
 
 2. Run tests:
@@ -254,15 +225,15 @@ The project includes built-in testing functionality to ensure the correctness an
 
 Contributions are welcome!
 
-### How to Contribute:
 1. Fork the repository.
-2. Create a new branch (`git checkout -b my-feature`).
-3. Commit your changes (`git commit -m 'Add a feature'`).
-4. Push the branch (`git push origin my-feature`).
-5. Open a pull request.
+2. Create a new branch:
+   ```bash
+   git checkout -b my-feature
+   ```
+3. Submit a pull request.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License. For more information, see the [LICENSE.md](LICENSE.md) file.
+This project is licensed under the MIT License. See [LICENSE.md](LICENSE.md) for more details.
