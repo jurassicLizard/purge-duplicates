@@ -4,9 +4,8 @@
 # This project is licensed under the MIT License.
 # For details, see the LICENSE.md file in the root of this repository.
 
-
 cmake_minimum_required(VERSION 3.15)
-project(purge-duplicates VERSION 0.0.1)
+project(purge-duplicates VERSION 0.1.0)
 
 # ----------------------------------------------------------------------------
 # C++ Standard
@@ -64,6 +63,23 @@ if (PDCPP_ENABLE_TESTING OR PDCPP_ENABLE_TESTING_WITH_ASAN)
     enable_testing()
     add_subdirectory(tests)
 endif()
+
+# ----------------------------------------------------------------------------
+# Install Targets
+# ----------------------------------------------------------------------------
+# Install the binary (executable)
+install(TARGETS purge-duplicates
+        RUNTIME DESTINATION bin                         # Destination for executables
+        LIBRARY DESTINATION lib                         # Destination for shared libraries
+        ARCHIVE DESTINATION lib                         # Destination for static libraries
+)
+
+# If there are public headers, install them too
+# (e.g., if you distribute a reusable library or API)
+install(DIRECTORY src/
+        DESTINATION include/purge-duplicates           # Install headers into an include directory
+        FILES_MATCHING PATTERN "*.hpp"                 # Only match header files
+)
 
 # ----------------------------------------------------------------------------
 # Build Configuration Summary

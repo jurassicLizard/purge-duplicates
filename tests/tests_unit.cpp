@@ -110,7 +110,7 @@ void test_identify_and_remove_duplicates() {
         std::ofstream(file3) << "Unique content";
 
         // Execute PurgeDuplicates logic
-        PurgeDuplicates pd(testDir, false);
+        PurgeDuplicates pd(testDir, false,true);
         pd.execute();
 
         // Check results
@@ -132,7 +132,7 @@ void test_identify_and_remove_duplicates() {
 
 void test_invalid_directory() {
     try {
-        PurgeDuplicates pd("non_existent_directory", false);
+        PurgeDuplicates pd("non_existent_directory", false,true);
         pd.execute(); // Should throw an error
 
         // If no error is thrown, the test fails
@@ -150,7 +150,7 @@ void test_permission_denied() {
         fs::create_directory(testDir);
         fs::permissions(testDir, fs::perms::none);
 
-        PurgeDuplicates pd(testDir, false);
+        PurgeDuplicates pd(testDir, false,true);
         pd.execute(); // Should throw an exception for restricted permissions
 
         // Cleanup
@@ -192,7 +192,7 @@ void test_identify_and_remove_binary_duplicates() {
         std::ofstream(file3, std::ios::binary).write(uniqueBinaryContent, sizeof(uniqueBinaryContent));
 
         // Execute PurgeDuplicates logic
-        PurgeDuplicates pd(testDir, false);
+        PurgeDuplicates pd(testDir, false,true);
         pd.execute();
 
         // Check results
@@ -248,7 +248,7 @@ void test_identify_and_remove_nested_duplicates() {
         std::ofstream(file5) << duplicateContent; // Duplicate content
 
         // Execute PurgeDuplicates logic
-        PurgeDuplicates pd(testDir, false);
+        PurgeDuplicates pd(testDir, false,true);
         pd.execute();
 
         // Check results
@@ -265,6 +265,46 @@ void test_identify_and_remove_nested_duplicates() {
         assert(file3Exists == true);
 
         std::cout << "Test Passed: Nested duplicate files are correctly identified and removed." << std::endl;
+
+        // Cleanup
+        fs::remove_all(testDir);
+    } catch (const std::exception& e) {
+        std::cerr << "Test Failed: " << e.what() << std::endl;
+    }
+}
+
+void test_live_and_dry_run() {
+    try {
+        const std::string testDir = "test_live_and_dry_run";
+        if (fs::exists(testDir)) {
+            fs::remove_all(testDir);
+        }
+        fs::create_directory(testDir);
+
+        std::string file1 = testDir + "/file1.txt";
+        std::string file2 = testDir + "/file2.txt"; // Duplicate
+        std::ofstream(file1) << "Duplicate content";
+        std::ofstream(file2) << "Duplicate content";
+
+        // Dry-run mode
+        {
+            PurgeDuplicates pd(testDir, false, false);
+            pd.execute();
+            // Verify files are not deleted
+            assert(fs::exists(file1));
+            assert(fs::exists(file2));
+            std::cout << "Dry run test passed." << std::endl;
+        }
+
+        // Live-run mode
+        {
+            PurgeDuplicates pd(testDir, false, true);
+            pd.execute();
+            // Verify duplicates are deleted
+            assert(fs::exists(file1));
+            assert(!fs::exists(file2));
+            std::cout << "Live run test passed." << std::endl;
+        }
 
         // Cleanup
         fs::remove_all(testDir);

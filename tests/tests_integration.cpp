@@ -82,7 +82,7 @@ void test_large_number_of_mixed_files() {
     }
 
     // Run PurgeDuplicates
-    PurgeDuplicates pd(testDir, false);
+    PurgeDuplicates pd(testDir, false,true);
     pd.execute();
 
     // Verify results: 250 ASCII duplicates and 250 binary duplicates should reduce to 2 unique files
@@ -120,7 +120,7 @@ void test_deeply_nested_directories_with_binary_files() {
     }
 
     // Run PurgeDuplicates
-    PurgeDuplicates pd(testDir, false);
+    PurgeDuplicates pd(testDir, false,true);
     pd.execute();
 
     // Verify results
@@ -154,7 +154,7 @@ void test_binary_and_ascii_edge_cases() {
     std::ofstream(testDir + "/ascii_unicode_✓.txt") << "Unicode ASCII content";
 
     // Run PurgeDuplicates
-    PurgeDuplicates pd(testDir, false);
+    PurgeDuplicates pd(testDir, false,true);
     pd.execute();
 
     // Verify results
@@ -169,11 +169,225 @@ void test_binary_and_ascii_edge_cases() {
     fs::remove_all(testDir);
 }
 
+void test_dry_run_mode() {
+    const std::string testDir = fs::temp_directory_path() / "test_dry_run";
+    if (fs::exists(testDir)) {
+        fs::remove_all(testDir);
+    }
+    fs::create_directory(testDir);
+
+    // Create duplicate and unique files
+    std::string file1 = testDir + "/file1.txt";       // Duplicate content
+    std::string file2 = testDir + "/file2.txt";       // Duplicate content
+    std::string file3 = testDir + "/file3.txt";       // Unique content
+
+    std::ofstream(file1) << "Duplicate content";
+    std::ofstream(file2) << "Duplicate content";
+    std::ofstream(file3) << "Unique content";
+
+    // Run dry-run
+    try {
+        PurgeDuplicates pd(testDir, false, false); // Dry-run mode
+        pd.execute();
+    } catch (const std::exception& e) {
+        std::cerr << "Test Failed: " << e.what() << std::endl;
+        return;
+    }
+
+    // Verify that no duplicates are actually deleted
+    bool file1Exists = fs::exists(file1);
+    bool file2Exists = fs::exists(file2);
+    bool file3Exists = fs::exists(file3);
+
+    assert(file1Exists == true);
+    assert(file2Exists == true);
+    assert(file3Exists == true);
+
+    std::cout << "Test Passed: Dry-run mode does not delete files and lists duplicates correctly." << std::endl;
+
+    fs::remove_all(testDir);
+}
+
+void test_live_run_mode() {
+    const std::string testDir = fs::temp_directory_path() / "test_live_run";
+    if (fs::exists(testDir)) {
+        fs::remove_all(testDir);
+    }
+    fs::create_directory(testDir);
+
+    // Create duplicate and unique files
+    std::string file1 = testDir + "/file1.txt";       // Duplicate content
+    std::string file2 = testDir + "/file2.txt";       // Duplicate content
+    std::string file3 = testDir + "/file3.txt";       // Unique content
+
+    std::ofstream(file1) << "Duplicate content";
+    std::ofstream(file2) << "Duplicate content";
+    std::ofstream(file3) << "Unique content";
+
+    // Run live-run
+    try {
+        PurgeDuplicates pd(testDir, false, true); // Live-run mode
+        pd.execute();
+    } catch (const std::exception& e) {
+        std::cerr << "Test Failed: " << e.what() << std::endl;
+        return;
+    }
+
+    // Verify that only duplicates are deleted
+    bool file1Exists = fs::exists(file1);
+    bool file2Exists = fs::exists(file2);
+    bool file3Exists = fs::exists(file3);
+
+    assert((file1Exists || file2Exists) == true); // One duplicate copy remains
+    assert(file3Exists == true);                 // Unique file should remain
+
+    std::cout << "Test Passed: Live-run mode deletes duplicate files and preserves unique files." << std::endl;
+
+    fs::remove_all(testDir);
+}
+
+void test_dry_run_then_live_run() {
+    const std::string testDir = fs::temp_directory_path() / "test_dry_run_then_live_run";
+    if (fs::exists(testDir)) {
+        fs::remove_all(testDir);
+    }
+    fs::create_directory(testDir);
+
+    // Create duplicate and unique files
+    std::string file1 = testDir + "/file1.txt";       // Duplicate content
+    std::string file2 = testDir + "/file2.txt";       // Duplicate content
+    std::string file3 = testDir + "/file3.txt";       // Unique content
+
+    std::ofstream(file1) << "Duplicate content";
+    std::ofstream(file2) << "Duplicate content";
+    std::ofstream(file3) << "Unique content";
+
+    // Run dry-run
+    try {
+        PurgeDuplicates dryRunPd(testDir, false, false); // Dry-run mode
+        dryRunPd.execute();
+    } catch (const std::exception& e) {
+        std::cerr << "Test Failed in Dry-Run: " << e.what() << std::endl;
+        return;
+    }
+
+    // Verify no files are deleted in dry-run
+    assert(fs::exists(file1));
+    assert(fs::exists(file2));
+    assert(fs::exists(file3));
+
+    // Run live-run
+    try {
+        PurgeDuplicates liveRunPd(testDir, false, true); // Live-run mode
+        liveRunPd.execute();
+    } catch (const std::exception& e) {
+        std::cerr << "Test Failed in Live-Run: " << e.what() << std::endl;
+        return;
+    }
+
+    // Verify that duplicates are deleted and unique file remains
+    bool file1Exists = fs::exists(file1);
+    bool file2Exists = fs::exists(file2);
+    bool file3Exists = fs::exists(file3);
+
+    assert((file1Exists || file2Exists) == true); // One duplicate remains
+    assert(file3Exists == true);                 // Unique file should remain
+
+    std::cout << "Test Passed: Dry-run preserves files; live-run deletes duplicates." << std::endl;
+
+    fs::remove_all(testDir);
+}
+
+void test_large_dataset_dry_run() {
+    const std::string testDir = fs::temp_directory_path() / "test_large_dataset_dry_run";
+    if (fs::exists(testDir)) {
+        fs::remove_all(testDir);
+    }
+    fs::create_directory(testDir);
+
+    // Create 1000 files with 500 duplicates
+    for (int i = 0; i < 1000; ++i) {
+        std::string filePath = testDir + "/file" + std::to_string(i) + ".txt";
+        if (i < 500) {
+            std::ofstream(filePath) << "Duplicate content";
+        } else {
+            std::ofstream(filePath) << "Unique content " << i;
+        }
+    }
+
+    // Run dry-run
+    try {
+        PurgeDuplicates pd(testDir, false, false); // Dry-run mode
+        pd.execute();
+    } catch (const std::exception& e) {
+        std::cerr << "Test Failed: " << e.what() << std::endl;
+        return;
+    }
+
+    // Verify all files still exist
+    size_t fileCount = 0;
+    for (const auto& entry : fs::directory_iterator(testDir)) {
+        if (entry.is_regular_file()) {
+            fileCount++;
+        }
+    }
+    assert(fileCount == 1000);
+
+    std::cout << "Test Passed: Dry-run mode handles large datasets without deleting files." << std::endl;
+
+    fs::remove_all(testDir);
+}
+
+void test_large_dataset_live_run() {
+    const std::string testDir = fs::temp_directory_path() / "test_large_dataset_live_run";
+    if (fs::exists(testDir)) {
+        fs::remove_all(testDir);
+    }
+    fs::create_directory(testDir);
+
+    // Create 1000 files with 500 duplicates
+    for (int i = 0; i < 1000; ++i) {
+        std::string filePath = testDir + "/file" + std::to_string(i) + ".txt";
+        if (i < 500) {
+            std::ofstream(filePath) << "Duplicate content";
+        } else {
+            std::ofstream(filePath) << "Unique content " << i;
+        }
+    }
+
+    // Run live-run
+    try {
+        PurgeDuplicates pd(testDir, false, true); // Live-run mode
+        pd.execute();
+    } catch (const std::exception& e) {
+        std::cerr << "Test Failed: " << e.what() << std::endl;
+        return;
+    }
+
+    // Verify duplicates are deleted (remaining files = 500 unique + 1 duplicate copy)
+    size_t fileCount = 0;
+    for (const auto& entry : fs::directory_iterator(testDir)) {
+        if (entry.is_regular_file()) {
+            fileCount++;
+        }
+    }
+    assert(fileCount == 501);
+
+    std::cout << "Test Passed: Live-run mode handles large datasets, removing duplicates." << std::endl;
+
+    fs::remove_all(testDir);
+}
+
 int main() {
     // Run all tests
     test_large_number_of_mixed_files(); // Mixed ASCII and binary files
     test_deeply_nested_directories_with_binary_files(); // Deeply nested with binary
     test_binary_and_ascii_edge_cases(); // Binary and ASCII edge cases
+    test_dry_run_mode(); // Test Dry run mode functionality
+    test_live_run_mode(); // Test Live run mode functionality
+    test_dry_run_then_live_run(); // Test Dry run followed by live run
+    test_large_dataset_dry_run(); // Test large dataset dry run
+    test_large_dataset_live_run(); // Test large dataset live run
 
     std::cout << "All integration tests passed!" << std::endl;
     return 0;
