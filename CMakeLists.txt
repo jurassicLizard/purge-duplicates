@@ -5,7 +5,7 @@
 # For details, see the LICENSE.md file in the root of this repository.
 
 cmake_minimum_required(VERSION 3.21)
-project(files-deduplicator VERSION 0.4.0)
+project(files-deduplicator VERSION 0.4.1)
 
 # ----------------------------------------------------------------------------
 # Executable name
